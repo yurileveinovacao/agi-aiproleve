@@ -68,6 +68,10 @@ export const env = createEnv({
     // LLM: xAI
     XAI_API_KEY: z.string().optional(),
 
+    // ERP: Omie
+    OMIE_APP_KEY: z.string().optional(),
+    OMIE_APP_SECRET: z.string().optional(),
+
 
     // Helicone - works on both OpenAI and Anthropic vendors
     HELICONE_API_KEY: z.string().optional(),
