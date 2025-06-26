@@ -290,7 +290,7 @@ export namespace OpenAIWire_API_Chat_Completions {
     stream_options: z.object({
       include_usage: z.boolean().optional(), // If set, an additional chunk will be streamed with a 'usage' field on the entire request.
     }).optional(),
-    reasoning_effort: z.enum(['low', 'medium', 'high']).optional(), // [OpenAI, 2024-12-17] reasoning effort, o1 models only for now
+    reasoning_effort: z.enum(['low', 'medium', 'high']).optional(), // [OpenAI, 2024-12-17] [Perplexity, 2025-06-23] reasoning effort
     include_reasoning: z.boolean().optional(), // [OpenRouter, 2025-01-24] enables reasoning tokens
     reasoning: z.object({ // [OpenRouter, 2025-06-05] Reasoning parameter for Claude models
       max_tokens: z.number().int().positive(),
@@ -351,6 +351,10 @@ export namespace OpenAIWire_API_Chat_Completions {
         }),
       }).nullable().optional(),
     }).optional(),
+
+    // [Perplexity, 2025-06-23] Perplexity-specific search parameters
+    search_mode: z.enum(['academic']).optional(), // Academic filter for scholarly sources
+    search_after_date_filter: z.string().optional(), // Date filter in MM/DD/YYYY format
 
     seed: z.number().int().optional(),
     stop: z.array(z.string()).optional(), // Up to 4 sequences where the API will stop generating further tokens.
@@ -490,7 +494,14 @@ export namespace OpenAIWire_API_Chat_Completions {
     warning: z.unknown().optional(),
 
     // [Perplexity] String array of citations, the first element is the first reference, i.e. '[1]'.
+    // DEPRECATED: The citations field is being deprecated in favor of the new search_results field
     citations: z.array(z.any()).optional(),
+    // [Perplexity, 2025-06-23] Search results
+    search_results: z.array(z.object({
+      title: z.string().optional().nullable(), // Title of the search result
+      url: z.string().optional().nullable(), // URL of the search result
+      date: z.string().optional().nullable(), // Date of the search result, e.g. '2024-01-01'
+    })).optional(),
   });
 
   /// Streaming Response
@@ -620,7 +631,14 @@ export namespace OpenAIWire_API_Chat_Completions {
     }).optional(),
 
     // [Perplexity] String array of citations, the first element is the first reference, i.e. '[1]'.
+    // DEPRECATED: The citations field is being deprecated in favor of the new search_results field
     citations: z.array(z.any()).optional(),
+    // [Perplexity, 2025-06-23] Search results
+    search_results: z.array(z.object({
+      title: z.string().optional().nullable(), // Title of the search result
+      url: z.string().optional().nullable(), // URL of the search result
+      date: z.string().optional().nullable(), // Date of the search result, e.g. '2024-01-01'
+    })).optional(),
   });
 
 }

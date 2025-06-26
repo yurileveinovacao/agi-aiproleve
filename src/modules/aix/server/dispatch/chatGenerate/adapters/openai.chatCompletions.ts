@@ -120,8 +120,26 @@ export function aixToOpenAIChatCompletions(openAIDialect: OpenAIDialects, model:
       };
   }
 
+  // [Perplexity] Vendor-specific extensions for search models
+  if (openAIDialect === 'perplexity') {
+    // Reasoning effort (reuses OpenAI parameter)
+    if (model.vndOaiReasoningEffort) {
+      payload.reasoning_effort = model.vndOaiReasoningEffort;
+    }
 
-  // [Anthropic] via OpenAI API (OpenRouter) - https://openrouter.ai/docs/use-cases/reasoning-tokens
+    // Search mode (academic filter)
+    if (model.vndPerplexitySearchMode && model.vndPerplexitySearchMode !== 'default') {
+      payload.search_mode = model.vndPerplexitySearchMode;
+    }
+
+    // Date range filter
+    if (model.vndPerplexityDateFilter && model.vndPerplexityDateFilter !== 'unfiltered') {
+      const filter = _convertPerplexityDateFilter(model.vndPerplexityDateFilter);
+      if (filter) payload.search_after_date_filter = filter;
+    }
+  }
+
+  // [OpenRouter] -> [Anthropic] via OpenAI API - https://openrouter.ai/docs/use-cases/reasoning-tokens
   if (openAIDialect === 'openrouter' && model.vndAntThinkingBudget !== undefined) {
 
     // vndAntThinkingBudget's presence indicates a user preference:
@@ -158,6 +176,17 @@ export function aixToOpenAIChatCompletions(openAIDialect: OpenAIDialects, model:
 
 
 function _fixAlternateUserAssistantRoles(chatMessages: TRequestMessages): TRequestMessages {
+
+  // [Perplexity, 2025-06-23] HotFix: if there's only 1 message from the system, treat it as a user message
+  if (chatMessages.length === 1 && chatMessages[0].role === 'system')
+    return [{ ...chatMessages[0], role: 'user' }];
+
+  // [Perplexity, 2025-06-23] HotFix: if an assistant message comes before the first user message, we prepend an empty user message
+  const firstUserIndex = chatMessages.findIndex(message => message.role === 'user');
+  const firstAssistantIndex = chatMessages.findIndex(message => message.role === 'assistant');
+  if (firstAssistantIndex !== -1 && firstAssistantIndex < firstUserIndex)
+    chatMessages.splice(firstAssistantIndex, 0, { role: 'user', content: [{ type: 'text', text: '' }] });
+
   return chatMessages.reduce((acc, historyItem) => {
 
     // treat intermediate system messages as user messages
@@ -303,7 +332,7 @@ function _toOpenAIMessages(systemMessage: AixMessages_SystemMessage | null, chat
        * o3-mini accepts both system and developer roles, and they seem to have the same effects
        */
       role: !hotFixOpenAIo1Family ? 'system' : 'developer',
-      content: _toApproximateOpanAIFlattenSystemMessage(msg0TextParts),
+      content: _toApproximateOpenAIFlattenSystemMessage(msg0TextParts),
     });
 
 
@@ -572,7 +601,7 @@ function _toOpenAIInReferenceToText(irt: AixParts_MetaInReferenceToPart): string
 
 // Approximate conversions
 
-function _toApproximateOpanAIFlattenSystemMessage(texts: OpenAIWire_ContentParts.TextContentPart[]): string {
+function _toApproximateOpenAIFlattenSystemMessage(texts: OpenAIWire_ContentParts.TextContentPart[]): string {
   return texts.map(text => text.text).join(approxSystemMessageJoiner);
 }
 
@@ -583,4 +612,24 @@ function _toApproximateOpenAIDocPart(part: AixParts_DocPart): OpenAIWire_Content
     return OpenAIWire_ContentParts.TextContentPart(part.data.text);
 
   return OpenAIWire_ContentParts.TextContentPart(approxDocPart_To_String(part));
+}
+
+
+// Vendor specific extensions
+
+function _convertPerplexityDateFilter(filter: string): string {
+  const now = new Date();
+  switch (filter) {
+    case '1m':
+      return new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()).toLocaleDateString('en-US');
+    case '3m':
+      return new Date(now.getFullYear(), now.getMonth() - 3, now.getDate()).toLocaleDateString('en-US');
+    case '6m':
+      return new Date(now.getFullYear(), now.getMonth() - 6, now.getDate()).toLocaleDateString('en-US');
+    case '1y':
+      return new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()).toLocaleDateString('en-US');
+    default:
+      console.warn('[DEV] Perplexity date filter not recognized:', filter);
+      return '';
+  }
 }
