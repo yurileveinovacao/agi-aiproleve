@@ -1,6 +1,14 @@
 import * as React from 'react';
 import { Box, Button, Card, CardContent, Chip, Divider, Grid, IconButton, Sheet, Stack, Table, Typography } from '@mui/joy';
-import { CheckCircleIcon, ErrorIcon, RefreshIcon, AccountBalanceIcon, PaymentIcon, ShoppingCartIcon } from '@mui/icons-material';
+import {
+  CheckCircle,
+  Error,
+  Refresh,
+  AccountBalance,
+  Payment,
+  ShoppingCart
+} from '@mui/icons-material';
+
 
 // Hooks do Omie
 import {
@@ -11,10 +19,10 @@ import {
   useResumoFinanceiro,
   useContasCorrentes,
   useSaldoContaCorrente,
-} from '../modules/omie/hooks/useOmieApi';
+} from '~/modules/omie/hooks/useOmieApi';
 
 // Tipos
-import type { ContaPagar, ContaReceber, PedidoCompra } from '../modules/omie/omie.types';
+import type { ContaPagar, ContaReceber, PedidoCompra } from '~/modules/omie/omie.types';
 
 // Formatação de valores
 const formatCurrency = (value: number) => 
@@ -87,7 +95,7 @@ export function AppOmie({ onClose }: AppOmieProps) {
           <Chip
             variant="soft"
             color={isConnected ? 'success' : 'danger'}
-            startDecorator={isConnected ? <CheckCircleIcon /> : <ErrorIcon />}
+            startDecorator={isConnected ? <CheckCircle /> : <Error />}
             sx={{ bgcolor: 'background.surface' }}
           >
             {isLoading ? 'Conectando...' : isConnected ? 'Conectado' : 'Desconectado'}
@@ -99,7 +107,7 @@ export function AppOmie({ onClose }: AppOmieProps) {
             onClick={() => conexaoQuery.refetch()}
             loading={conexaoQuery.isFetching}
           >
-            <RefreshIcon />
+            <Refresh />
           </IconButton>
 
           {onClose && (
@@ -128,7 +136,7 @@ export function AppOmie({ onClose }: AppOmieProps) {
             <Grid xs={12}>
               <Card variant="outlined">
                 <CardContent>
-                  <Typography level="title-lg" startDecorator={<AccountBalanceIcon />}>
+                  <Typography level="title-lg" startDecorator={<AccountBalance />}>
                     Resumo Financeiro - {formatDate(selectedPeriod.data_de)} a {formatDate(selectedPeriod.data_ate)}
                   </Typography>
                   
@@ -185,7 +193,7 @@ export function AppOmie({ onClose }: AppOmieProps) {
             <Grid xs={12} md={6}>
               <Card variant="outlined">
                 <CardContent>
-                  <Typography level="title-md" startDecorator={<PaymentIcon />} sx={{ mb: 2 }}>
+                  <Typography level="title-md" startDecorator={<Payment />} sx={{ mb: 2 }}>
                     Contas a Pagar (Abertas)
                   </Typography>
                   
@@ -221,7 +229,7 @@ export function AppOmie({ onClose }: AppOmieProps) {
             <Grid xs={12} md={6}>
               <Card variant="outlined">
                 <CardContent>
-                  <Typography level="title-md" startDecorator={<AccountBalanceIcon />} sx={{ mb: 2 }}>
+                  <Typography level="title-md" startDecorator={<AccountBalance />} sx={{ mb: 2 }}>
                     Contas a Receber (Abertas)
                   </Typography>
                   
@@ -257,7 +265,7 @@ export function AppOmie({ onClose }: AppOmieProps) {
             <Grid xs={12}>
               <Card variant="outlined">
                 <CardContent>
-                  <Typography level="title-md" startDecorator={<ShoppingCartIcon />} sx={{ mb: 2 }}>
+                  <Typography level="title-md" startDecorator={<ShoppingCart />} sx={{ mb: 2 }}>
                     Pedidos de Compra (Aprovados)
                   </Typography>
                   
